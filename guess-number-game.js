@@ -1,4 +1,17 @@
 // 第二关：四位数猜测游戏
+
+// 兼容性工具函数
+function getCanvasRect(canvas) {
+  if (typeof wx !== "undefined") {
+    // 小程序环境：返回相对于屏幕的坐标
+    // 在小程序中，canvas通常占满整个屏幕，所以返回 {left: 0, top: 0}
+    return { left: 0, top: 0, width: canvas.width, height: canvas.height };
+  } else {
+    // Web环境：使用原生getBoundingClientRect方法
+    return canvas.getBoundingClientRect();
+  }
+}
+
 class GuessNumberGame {
   constructor(canvas, ctx, gameManager) {
     this.canvas = canvas;
@@ -127,9 +140,18 @@ class GuessNumberGame {
       if (!this.isGameActive || this.isModalVisible) return;
 
       const touch = e.touches[0];
-      const rect = this.canvas.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
+      let x, y;
+
+      if (typeof wx !== "undefined") {
+        // 小程序环境：直接使用触摸坐标
+        x = touch.clientX;
+        y = touch.clientY;
+      } else {
+        // Web环境：需要计算偏移
+        const rect = getCanvasRect(this.canvas);
+        x = touch.clientX - rect.left;
+        y = touch.clientY - rect.top;
+      }
 
       this.handleTouch(x, y);
     };
@@ -137,8 +159,15 @@ class GuessNumberGame {
     // 触摸移动事件
     this.touchMoveHandler = (e) => {
       if (this.isHistoryScrolling) {
-        const rect = this.canvas.getBoundingClientRect();
-        const y = e.touches[0].clientY - rect.top;
+        let y;
+        if (typeof wx !== "undefined") {
+          // 小程序环境：直接使用触摸坐标
+          y = e.touches[0].clientY;
+        } else {
+          // Web环境：需要计算偏移
+          const rect = getCanvasRect(this.canvas);
+          y = e.touches[0].clientY - rect.top;
+        }
         const deltaY = this.lastTouchY - y;
 
         // 计算滚动
@@ -547,9 +576,18 @@ class GuessNumberGame {
 
     this.modalTouchHandler = (e) => {
       const touch = e.touches[0];
-      const rect = this.canvas.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
+      let x, y;
+
+      if (typeof wx !== "undefined") {
+        // 小程序环境：直接使用触摸坐标
+        x = touch.clientX;
+        y = touch.clientY;
+      } else {
+        // Web环境：需要计算偏移
+        const rect = getCanvasRect(this.canvas);
+        x = touch.clientX - rect.left;
+        y = touch.clientY - rect.top;
+      }
 
       const buttonY = modalY + modalHeight * 0.75;
       const buttonHeight = 40;

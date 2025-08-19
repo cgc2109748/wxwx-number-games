@@ -1,4 +1,17 @@
 // 升级版数字消除游戏 - 第四关
+
+// 兼容性工具函数
+function getCanvasRect(canvas) {
+  if (typeof wx !== "undefined") {
+    // 小程序环境：返回相对于屏幕的坐标
+    // 在小程序中，canvas通常占满整个屏幕，所以返回 {left: 0, top: 0}
+    return { left: 0, top: 0, width: canvas.width, height: canvas.height };
+  } else {
+    // Web环境：使用原生getBoundingClientRect方法
+    return canvas.getBoundingClientRect();
+  }
+}
+
 class AdvancedNumberEliminationGame {
   constructor(canvas, ctx, gameManager, initialScore = 0) {
     this.canvas = canvas;
@@ -202,9 +215,18 @@ class AdvancedNumberEliminationGame {
     if (!this.gameRunning || this.showModal) return;
 
     const touch = e.touches[0];
-    const rect = this.canvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
+    let x, y;
+
+    if (typeof wx !== "undefined") {
+      // 小程序环境：直接使用触摸坐标
+      x = touch.clientX;
+      y = touch.clientY;
+    } else {
+      // Web环境：需要计算偏移
+      const rect = getCanvasRect(this.canvas);
+      x = touch.clientX - rect.left;
+      y = touch.clientY - rect.top;
+    }
 
     this.handleStart(x, y);
   }
@@ -213,9 +235,18 @@ class AdvancedNumberEliminationGame {
     if (!this.gameRunning || this.showModal || !this.isSelecting) return;
 
     const touch = e.touches[0];
-    const rect = this.canvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
+    let x, y;
+
+    if (typeof wx !== "undefined") {
+      // 小程序环境：直接使用触摸坐标
+      x = touch.clientX;
+      y = touch.clientY;
+    } else {
+      // Web环境：需要计算偏移
+      const rect = getCanvasRect(this.canvas);
+      x = touch.clientX - rect.left;
+      y = touch.clientY - rect.top;
+    }
 
     this.handleMove(x, y);
   }
@@ -224,9 +255,18 @@ class AdvancedNumberEliminationGame {
     // 如果模态框显示，处理模态框点击
     if (this.showModal) {
       const touch = e.changedTouches[0];
-      const rect = this.canvas.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
+      let x, y;
+
+      if (typeof wx !== "undefined") {
+        // 小程序环境：直接使用触摸坐标
+        x = touch.clientX;
+        y = touch.clientY;
+      } else {
+        // Web环境：需要计算偏移
+        const rect = getCanvasRect(this.canvas);
+        x = touch.clientX - rect.left;
+        y = touch.clientY - rect.top;
+      }
       this.handleClick(x, y);
       return;
     }
@@ -237,7 +277,7 @@ class AdvancedNumberEliminationGame {
   handleMouseDown(e) {
     if (!this.gameRunning || this.showModal) return;
 
-    const rect = this.canvas.getBoundingClientRect();
+    const rect = getCanvasRect(this.canvas);
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
@@ -247,7 +287,7 @@ class AdvancedNumberEliminationGame {
   handleMouseMove(e) {
     if (!this.gameRunning || this.showModal || !this.isSelecting) return;
 
-    const rect = this.canvas.getBoundingClientRect();
+    const rect = getCanvasRect(this.canvas);
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
@@ -257,7 +297,7 @@ class AdvancedNumberEliminationGame {
   handleMouseUp(e) {
     // 如果模态框显示，处理模态框点击
     if (this.showModal) {
-      const rect = this.canvas.getBoundingClientRect();
+      const rect = getCanvasRect(this.canvas);
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       this.handleClick(x, y);
@@ -268,7 +308,7 @@ class AdvancedNumberEliminationGame {
   }
 
   handleCanvasClick(event) {
-    const rect = this.canvas.getBoundingClientRect();
+    const rect = getCanvasRect(this.canvas);
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 

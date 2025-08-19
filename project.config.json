@@ -48,7 +48,7 @@
     "disableSWC": true
   },
   "compileType": "game",
-  "libVersion": "2.19.4",
+  "libVersion": "2.16.1",
   "appid": "wxdca6c341a609a717",
   "projectname": "Hello World 小游戏",
   "isGameTourist": false,

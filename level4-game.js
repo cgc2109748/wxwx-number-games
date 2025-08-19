@@ -1,3 +1,17 @@
+// level4-game.js - 第四关：完成游戏页面
+
+// 兼容性工具函数
+function getCanvasRect(canvas) {
+  if (typeof wx !== "undefined") {
+    // 小程序环境：返回相对于屏幕的坐标
+    // 在小程序中，canvas通常占满整个屏幕，所以返回 {left: 0, top: 0}
+    return { left: 0, top: 0, width: canvas.width, height: canvas.height };
+  } else {
+    // Web环境：使用原生getBoundingClientRect方法
+    return canvas.getBoundingClientRect();
+  }
+}
+
 class Level4Game {
   constructor(canvas, ctx, gameManager, initialScore = 0) {
     this.canvas = canvas;
@@ -91,7 +105,7 @@ class Level4Game {
       } else {
         // Web环境
         const touch = e.touches[0];
-        const rect = this.canvas.getBoundingClientRect();
+        const rect = getCanvasRect(this.canvas);
         x = touch.clientX - rect.left;
         y = touch.clientY - rect.top;
       }

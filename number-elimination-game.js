@@ -1,5 +1,17 @@
 // number-elimination-game.js - 第三关：数字消除游戏
 
+// 兼容性工具函数
+function getCanvasRect(canvas) {
+  if (typeof wx !== "undefined") {
+    // 小程序环境：返回相对于屏幕的坐标
+    // 在小程序中，canvas通常占满整个屏幕，所以返回 {left: 0, top: 0}
+    return { left: 0, top: 0, width: canvas.width, height: canvas.height };
+  } else {
+    // Web环境：使用原生getBoundingClientRect方法
+    return canvas.getBoundingClientRect();
+  }
+}
+
 class NumberEliminationGame {
   constructor(canvas, ctx, gameManager) {
     this.canvas = canvas;
@@ -123,18 +135,27 @@ class NumberEliminationGame {
 
     // 绑定点击事件监听器
     this.clickHandler = (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      const scaleX = this.canvas.width / rect.width;
-      const scaleY = this.canvas.height / rect.height;
-
       let x, y;
-      if (e.type === "touchstart") {
+
+      if (typeof wx !== "undefined") {
+        // 小程序环境：直接使用触摸坐标
         const touch = e.touches[0];
-        x = (touch.clientX - rect.left) * scaleX;
-        y = (touch.clientY - rect.top) * scaleY;
+        x = touch.clientX;
+        y = touch.clientY;
       } else {
-        x = (e.clientX - rect.left) * scaleX;
-        y = (e.clientY - rect.top) * scaleY;
+        // Web环境：需要计算缩放和偏移
+        const rect = getCanvasRect(this.canvas);
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+
+        if (e.type === "touchstart") {
+          const touch = e.touches[0];
+          x = (touch.clientX - rect.left) * scaleX;
+          y = (touch.clientY - rect.top) * scaleY;
+        } else {
+          x = (e.clientX - rect.left) * scaleX;
+          y = (e.clientY - rect.top) * scaleY;
+        }
       }
 
       this.handleTouch(x, y);
