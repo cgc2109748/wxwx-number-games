@@ -125,7 +125,9 @@ class StartPage {
   startGame() {
     // 移除事件监听器
     this.unbindEvents();
-    // 开始第一关游戏
+    // 重置游戏状态并开始第一关游戏
+    this.gameManager.currentLevel = 1;
+    this.gameManager.totalScore = 0;
     this.gameManager.loadLevel(1);
   }
 

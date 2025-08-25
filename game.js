@@ -86,6 +86,9 @@ class GameManager {
       this.currentGame.destroy();
     }
 
+    // 设置当前关卡
+    this.currentLevel = level;
+
     // 根据关卡加载对应游戏
     switch (level) {
       case 1:

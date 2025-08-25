@@ -41,6 +41,10 @@ class NumberEliminationGame {
     this.gameResult = null;
     this.timer = null;
 
+    // 防抖相关
+    this.nextLevelDebounceTimer = null;
+    this.isNextLevelProcessing = false;
+
     // 界面布局
     this.layout = {
       headerHeight: 80,
@@ -61,6 +65,10 @@ class NumberEliminationGame {
     this.isGameActive = true;
     this.isModalVisible = false;
     this.gameResult = null;
+
+    // 重置防抖状态
+    this.nextLevelDebounceTimer = null;
+    this.isNextLevelProcessing = false;
 
     this.calculateLayout();
     this.generateGrid();
@@ -390,7 +398,10 @@ class NumberEliminationGame {
   showModal(isWin) {
     this.isModalVisible = true;
     this.render();
-    this.bindModalEvents(isWin);
+    // 在渲染完成后立即绑定模态框事件
+    setTimeout(() => {
+      this.bindModalEvents(isWin);
+    }, 0);
   }
 
   handleModalTouch(x, y) {
@@ -442,8 +453,32 @@ class NumberEliminationGame {
   }
 
   nextLevel() {
-    this.gameManager.setScore(this.score);
-    this.gameManager.nextLevel();
+    this.handleNextLevelClick();
+  }
+
+  // 防抖处理下一关按钮点击
+  handleNextLevelClick() {
+    // 如果正在处理中，直接返回
+    if (this.isNextLevelProcessing) {
+      return;
+    }
+
+    // 设置处理状态
+    this.isNextLevelProcessing = true;
+
+    // 清除之前的定时器
+    if (this.nextLevelDebounceTimer) {
+      clearTimeout(this.nextLevelDebounceTimer);
+    }
+
+    // 设置防抖延迟（500ms）
+    this.nextLevelDebounceTimer = setTimeout(() => {
+      // 执行下一关逻辑
+      this.gameManager.setScore(this.score);
+      this.gameManager.nextLevel();
+      // 重置处理状态
+      this.isNextLevelProcessing = false;
+    }, 500);
   }
 
   restart() {
@@ -679,6 +714,11 @@ class NumberEliminationGame {
 
   destroy() {
     this.clearInterval();
+
+    // 清理防抖定时器
+    if (this.nextLevelDebounceTimer) {
+      clearTimeout(this.nextLevelDebounceTimer);
+    }
 
     // 使用微信小游戏的触摸事件API
     if (typeof wx !== "undefined") {

@@ -31,7 +31,7 @@ class SortingGame {
 
     // 游戏状态
     this.level = 1;
-    this.score = this.config.initialScore;
+    this.score = this.gameManager.getScore() || this.config.initialScore;
     this.timeLeft = this.config.initialTime;
     this.isGameActive = true;
     this.isModalVisible = false;
@@ -55,10 +55,26 @@ class SortingGame {
     // 选中的格子
     this.selectedCell = null;
 
+    // 防抖相关
+    this.nextLevelDebounceTimer = null;
+    this.isNextLevelProcessing = false;
+
     this.init();
   }
 
   init() {
+    // 重置游戏状态
+    this.score = this.gameManager.getScore() || this.config.initialScore;
+    this.timeLeft = this.config.initialTime;
+    this.isGameActive = true;
+    this.isModalVisible = false;
+    this.gameResult = null;
+    this.selectedCell = null;
+    
+    // 重置防抖状态
+    this.nextLevelDebounceTimer = null;
+    this.isNextLevelProcessing = false;
+    
     this.shuffleGrid();
     this.bindEvents();
     this.startTimer();
@@ -252,12 +268,14 @@ class SortingGame {
     // 重新渲染整个画面，包括模态框
     this.render();
 
-    // 绑定模态框事件
-    const modalWidth = this.canvas.width * 0.8;
-    const modalHeight = this.canvas.height * 0.4;
-    const modalX = (this.canvas.width - modalWidth) / 2;
-    const modalY = (this.canvas.height - modalHeight) / 2;
-    this.bindModalEvents(modalX, modalY, modalWidth, modalHeight, isWin);
+    // 在渲染完成后立即绑定模态框事件
+    setTimeout(() => {
+      const modalWidth = this.canvas.width * 0.8;
+      const modalHeight = this.canvas.height * 0.4;
+      const modalX = (this.canvas.width - modalWidth) / 2;
+      const modalY = (this.canvas.height - modalHeight) / 2;
+      this.bindModalEvents(modalX, modalY, modalWidth, modalHeight, isWin);
+    }, 0);
   }
 
   drawModal(isWin) {
@@ -465,8 +483,7 @@ class SortingGame {
           y >= buttonY &&
           y <= buttonY + buttonHeight
         ) {
-          this.canvas.removeEventListener("touchstart", modalTouchHandler);
-          this.gameManager.nextLevel(this.score);
+          this.handleNextLevelClick(modalTouchHandler);
         }
       } else {
         const buttonWidth = modalWidth * 0.35;
@@ -530,6 +547,32 @@ class SortingGame {
     this.gameResult = null;
     this.startTimer();
     this.render();
+  }
+
+  // 防抖处理下一关按钮点击
+  handleNextLevelClick(modalTouchHandler) {
+    // 如果正在处理中，直接返回
+    if (this.isNextLevelProcessing) {
+      return;
+    }
+
+    // 设置处理状态
+    this.isNextLevelProcessing = true;
+
+    // 清除之前的定时器
+    if (this.nextLevelDebounceTimer) {
+      clearTimeout(this.nextLevelDebounceTimer);
+    }
+
+    // 设置防抖延迟（500ms）
+    this.nextLevelDebounceTimer = setTimeout(() => {
+      // 移除事件监听器
+      this.unbindModalEvents(modalTouchHandler);
+      // 执行下一关逻辑
+      this.gameManager.nextLevel(this.score);
+      // 重置处理状态
+      this.isNextLevelProcessing = false;
+    }, 500);
   }
 
   render() {
@@ -863,6 +906,11 @@ class SortingGame {
   destroy() {
     if (this.timer) {
       clearInterval(this.timer);
+    }
+
+    // 清理防抖定时器
+    if (this.nextLevelDebounceTimer) {
+      clearTimeout(this.nextLevelDebounceTimer);
     }
 
     // 使用微信小游戏的触摸事件API

@@ -23,7 +23,7 @@ class AdvancedNumberEliminationGame {
       rows: 16,
       cols: 10,
       totalCells: 160,
-      initialTime: 120, // 初始倒计时120秒
+      initialTime: 3, // 初始倒计时120秒
       bonusTime: 10, // 加时按钮增加的时间
       continueTime: 20, // 继续按钮增加的时间
       eliminateScore: 10, // 每次消除得分
@@ -56,6 +56,10 @@ class AdvancedNumberEliminationGame {
     // 数字移动相关状态
     this.isMovingMode = false;
     this.selectedForMove = null;
+
+    // 防抖相关
+    this.nextLevelDebounceTimer = null;
+    this.isNextLevelProcessing = false;
 
     // 计算布局
     this.calculateLayout();
@@ -101,6 +105,10 @@ class AdvancedNumberEliminationGame {
   }
 
   init() {
+    // 重置防抖状态
+    this.nextLevelDebounceTimer = null;
+    this.isNextLevelProcessing = false;
+
     this.generateGrid();
     this.bindEvents();
     this.startTimer();
@@ -805,7 +813,7 @@ class AdvancedNumberEliminationGame {
         y >= buttonY &&
         y <= buttonY + buttonHeight
       ) {
-        this.gameManager.gameComplete();
+        this.handleGameCompleteClick();
         return true;
       }
     }
@@ -845,6 +853,30 @@ class AdvancedNumberEliminationGame {
 
     this.startTimer();
     this.render();
+  }
+
+  // 防抖处理游戏结束按钮点击
+  handleGameCompleteClick() {
+    // 如果正在处理中，直接返回
+    if (this.isNextLevelProcessing) {
+      return;
+    }
+
+    // 设置处理状态
+    this.isNextLevelProcessing = true;
+
+    // 清除之前的定时器
+    if (this.nextLevelDebounceTimer) {
+      clearTimeout(this.nextLevelDebounceTimer);
+    }
+
+    // 设置防抖延迟（500ms）
+    this.nextLevelDebounceTimer = setTimeout(() => {
+      // 执行游戏结束逻辑
+      this.gameManager.gameComplete();
+      // 重置处理状态
+      this.isNextLevelProcessing = false;
+    }, 500);
   }
 
   render() {
@@ -1288,6 +1320,11 @@ class AdvancedNumberEliminationGame {
   destroy() {
     if (this.timer) {
       clearInterval(this.timer);
+    }
+
+    // 清理防抖定时器
+    if (this.nextLevelDebounceTimer) {
+      clearTimeout(this.nextLevelDebounceTimer);
     }
 
     // 使用微信小游戏的触摸事件API
