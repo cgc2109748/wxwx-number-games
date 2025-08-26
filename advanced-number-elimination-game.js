@@ -23,7 +23,7 @@ class AdvancedNumberEliminationGame {
       rows: 16,
       cols: 10,
       totalCells: 160,
-      initialTime: 3, // 初始倒计时120秒
+      initialTime: 120, // 初始倒计时120秒
       bonusTime: 10, // 加时按钮增加的时间
       continueTime: 20, // 继续按钮增加的时间
       eliminateScore: 10, // 每次消除得分
