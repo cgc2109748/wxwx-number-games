@@ -387,12 +387,19 @@ class AdvancedNumberEliminationGame {
       if (this.isMovingMode && this.selectedForMove) {
         // 移动模式：将选中的数字移动到空白格子
         if (this.grid[gridPos.row][gridPos.col] === 0) {
-          this.grid[gridPos.row][gridPos.col] =
-            this.grid[this.selectedForMove.row][this.selectedForMove.col];
-          this.grid[this.selectedForMove.row][this.selectedForMove.col] = 0;
-          this.isMovingMode = false;
-          this.selectedForMove = null;
-          this.render();
+          // 检查是否有可行路径
+          if (this.canMoveTo(this.selectedForMove, gridPos)) {         
+            this.grid[gridPos.row][gridPos.col] = this.grid[this.selectedForMove.row][this.selectedForMove.col];
+            this.grid[this.selectedForMove.row][this.selectedForMove.col] = 0;
+            this.isMovingMode = false;
+            this.selectedForMove = null;
+            this.render();
+          } else {
+            // 路径被阻挡，无法移动
+            this.isMovingMode = false;
+            this.selectedForMove = null;
+            this.render();
+          }
         } else {
           // 点击了非空格子，取消移动模式
           this.isMovingMode = false;
@@ -483,36 +490,84 @@ class AdvancedNumberEliminationGame {
   }
 
   canMoveTo(fromCell, toCell) {
-    // 检查两个格子间是否有直线路径且没有其他格子阻挡
-    const rowDiff = toCell.row - fromCell.row;
-    const colDiff = toCell.col - fromCell.col;
-
-    // 只允许水平、垂直或对角线移动
-    if (
-      rowDiff !== 0 &&
-      colDiff !== 0 &&
-      Math.abs(rowDiff) !== Math.abs(colDiff)
-    ) {
-      return false;
-    }
-
-    // 计算移动方向
-    const rowStep = rowDiff === 0 ? 0 : rowDiff > 0 ? 1 : -1;
-    const colStep = colDiff === 0 ? 0 : colDiff > 0 ? 1 : -1;
-
-    // 检查路径上是否有阻挡
-    let currentRow = fromCell.row + rowStep;
-    let currentCol = fromCell.col + colStep;
-
-    while (currentRow !== toCell.row || currentCol !== toCell.col) {
-      if (this.grid[currentRow][currentCol] !== 0) {
-        return false; // 路径被阻挡
+    // 使用广度优先搜索(BFS)检查是否存在从起点到终点的无阻挡路径
+    const queue = [{row: fromCell.row, col: fromCell.col, path: []}];
+    const visited = new Set();
+    const directions = [
+      {row: -1, col: 0}, // 上
+      {row: 1, col: 0},  // 下
+      {row: 0, col: -1}, // 左
+      {row: 0, col: 1},  // 右
+      {row: -1, col: -1}, // 左上
+      {row: -1, col: 1},  // 右上
+      {row: 1, col: -1},  // 左下
+      {row: 1, col: 1}    // 右下
+    ];
+    
+    while (queue.length > 0) {
+      const current = queue.shift();
+      const key = `${current.row},${current.col}`;
+      
+      // 如果已经访问过这个位置，跳过
+      if (visited.has(key)) {
+        continue;
       }
-      currentRow += rowStep;
-      currentCol += colStep;
+      visited.add(key);
+      
+      // 如果到达目标位置
+      if (current.row === toCell.row && current.col === toCell.col) {
+        return true;
+      }
+      
+      // 探索所有可能的方向
+       for (const dir of directions) {
+         const newRow = current.row + dir.row;
+         const newCol = current.col + dir.col;
+         const newKey = `${newRow},${newCol}`;
+         
+         // 检查边界
+         if (newRow < 0 || newRow >= this.config.rows || newCol < 0 || newCol >= this.config.cols) {
+           continue;
+         }
+         
+         // 如果已经访问过，跳过
+         if (visited.has(newKey)) {
+           continue;
+         }
+         
+         // 检查对角线移动的阻挡
+         if (dir.row !== 0 && dir.col !== 0) {
+           // 对角线移动，检查两边是否有阻挡
+           const side1Row = current.row + dir.row;
+           const side1Col = current.col;
+           const side2Row = current.row;
+           const side2Col = current.col + dir.col;
+           
+           // 如果对角线两边都有数字，则被阻挡
+           if (side1Row >= 0 && side1Row < this.config.rows && side1Col >= 0 && side1Col < this.config.cols &&
+               side2Row >= 0 && side2Row < this.config.rows && side2Col >= 0 && side2Col < this.config.cols &&
+               this.grid[side1Row][side1Col] !== 0 && this.grid[side2Row][side2Col] !== 0) {
+             continue;
+           }
+         }
+         
+         // 如果是目标位置，直接加入队列
+          if (newRow === toCell.row && newCol === toCell.col) {
+            queue.push({row: newRow, col: newCol, path: [...current.path, {row: newRow, col: newCol}]});
+            continue;
+          }
+          
+          // 如果这个位置有数字（不为0），则被阻挡，不能通过
+          if (this.grid[newRow][newCol] !== 0) {
+            continue;
+          }
+          
+          // 如果这个位置没有数字（为0），可以通过
+          queue.push({row: newRow, col: newCol, path: [...current.path, {row: newRow, col: newCol}]});
+       }
     }
-
-    return true;
+    
+    return false; // 没有找到可行路径
   }
 
   isButtonClicked(x, y) {

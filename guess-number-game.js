@@ -238,8 +238,8 @@ class GuessNumberGame {
 
   handleTouch(x, y) {
     // 检查历史记录区域滚动
-    const historyAreaY = this.canvas.height * 0.85;
-    const historyAreaHeight = this.canvas.height * 0.12;
+    const historyAreaY = this.canvas.height * 0.82;
+    const historyAreaHeight = this.canvas.height * 0.55;
 
     if (
       y >= historyAreaY &&
@@ -251,14 +251,59 @@ class GuessNumberGame {
       return;
     }
 
-    // 检查虚拟键盘点击（九宫格布局）- 优先级最高
-    const keyboardStartY = this.canvas.height * 0.4;
+    // 检查按钮点击
+    const buttonY = this.canvas.height * 0.7;
+    const buttonHeight = 40;
+    const buttonWidth = 80;
+    const spacing = 20;
+    const totalWidth = 4 * buttonWidth + 3 * spacing;
+    const startX = (this.canvas.width - totalWidth) / 2;
+    
+    if (y >= buttonY && y <= buttonY + buttonHeight) {
+      // 提示按钮
+      if (x >= startX && x <= startX + buttonWidth) {
+        this.showHint();
+      }
+      // 加时按钮
+      else if (x >= startX + buttonWidth + spacing && x <= startX + 2 * buttonWidth + spacing) {
+        this.addTime();
+      }
+      // 提交按钮
+      else if (x >= startX + 2 * (buttonWidth + spacing) && x <= startX + 3 * buttonWidth + 2 * spacing) {
+        this.submitGuess();
+      }
+      // 跳关按钮
+      else if (x >= startX + 3 * (buttonWidth + spacing) && x <= startX + 4 * buttonWidth + 3 * spacing) {
+        this.skipLevel();
+      }
+    }
+    
+    // 检查输入框点击
+    const inputY = this.canvas.height * 0.25;
+    const inputHeight = 50;
+    const inputWidth = 50;
+    const inputSpacing = 10;
+    const inputTotalWidth = 4 * inputWidth + 3 * inputSpacing;
+    const inputStartX = (this.canvas.width - inputTotalWidth) / 2;
+    
+    if (y >= inputY && y <= inputY + inputHeight) {
+      for (let i = 0; i < 4; i++) {
+        const inputX = inputStartX + i * (inputWidth + inputSpacing);
+        if (x >= inputX && x <= inputX + inputWidth) {
+          this.currentInputIndex = i;
+          this.render();
+          break;
+        }
+      }
+    }
+    
+    // 检查虚拟键盘点击（九宫格布局）
+    const keyboardStartY = this.canvas.height * 0.45;
     const keyWidth = 45;
     const keyHeight = 45;
     const keySpacing = 8;
     const keysPerRow = 3;
-    const keyboardTotalWidth =
-      keysPerRow * keyWidth + (keysPerRow - 1) * keySpacing;
+    const keyboardTotalWidth = keysPerRow * keyWidth + (keysPerRow - 1) * keySpacing;
     const keyboardStartX = (this.canvas.width - keyboardTotalWidth) / 2;
 
     // 九宫格布局：1-9，底部一行：0和删除键
@@ -272,7 +317,7 @@ class GuessNumberGame {
     let keyboardClicked = false;
     keys.forEach((row, rowIndex) => {
       row.forEach((key, colIndex) => {
-        if (key === "" || keyboardClicked) return; // 跳过空位或已点击
+        if (key === '') return; // 跳过空位
 
         let keyX, keyY;
         if (rowIndex === 3) {
@@ -293,7 +338,6 @@ class GuessNumberGame {
           y >= keyY &&
           y <= keyY + keyHeight
         ) {
-          keyboardClicked = true;
           if (key === "←") {
             this.handleBackspace();
           } else {
@@ -302,66 +346,6 @@ class GuessNumberGame {
         }
       });
     });
-
-    // 如果虚拟键盘被点击，直接返回，不检查其他区域
-    if (keyboardClicked) {
-      return;
-    }
-
-    // 检查输入框点击
-    const inputY = this.canvas.height * 0.25;
-    const inputHeight = 50;
-    const inputWidth = 50;
-    const inputSpacing = 10;
-    const inputTotalWidth = 4 * inputWidth + 3 * inputSpacing;
-    const inputStartX = (this.canvas.width - inputTotalWidth) / 2;
-
-    if (y >= inputY && y <= inputY + inputHeight) {
-      for (let i = 0; i < 4; i++) {
-        const inputX = inputStartX + i * (inputWidth + inputSpacing);
-        if (x >= inputX && x <= inputX + inputWidth) {
-          this.currentInputIndex = i;
-          this.render();
-          return;
-        }
-      }
-    }
-
-    // 检查按钮点击 - 优先级最低
-    const buttonY = this.canvas.height * 0.75;
-    const buttonHeight = 40;
-    const buttonWidth = 80;
-    const spacing = 20;
-    const totalWidth = 4 * buttonWidth + 3 * spacing;
-    const startX = (this.canvas.width - totalWidth) / 2;
-
-    if (y >= buttonY && y <= buttonY + buttonHeight) {
-      // 提示按钮
-      if (x >= startX && x <= startX + buttonWidth) {
-        this.showHint();
-      }
-      // 加时按钮
-      else if (
-        x >= startX + buttonWidth + spacing &&
-        x <= startX + 2 * buttonWidth + spacing
-      ) {
-        this.addTime();
-      }
-      // 提交按钮
-      else if (
-        x >= startX + 2 * (buttonWidth + spacing) &&
-        x <= startX + 3 * buttonWidth + 2 * spacing
-      ) {
-        this.submitGuess();
-      }
-      // 跳关按钮
-      else if (
-        x >= startX + 3 * (buttonWidth + spacing) &&
-        x <= startX + 4 * buttonWidth + 3 * spacing
-      ) {
-        this.skipLevel();
-      }
-    }
   }
 
   showHint() {
@@ -851,7 +835,7 @@ class GuessNumberGame {
   }
 
   drawButtons() {
-    const y = this.canvas.height * 0.75;
+    const y = this.canvas.height * 0.7;
     const buttonWidth = 80;
     const buttonHeight = 40;
     const spacing = 20;
@@ -890,7 +874,7 @@ class GuessNumberGame {
   drawVirtualKeyboard() {
     if (this.isModalVisible) return;
 
-    const startY = this.canvas.height * 0.4;
+    const startY = this.canvas.height * 0.45;
     const keyWidth = 45;
     const keyHeight = 45;
     const spacing = 8;
@@ -947,8 +931,8 @@ class GuessNumberGame {
     if (this.guessHistory.length === 0) return;
 
     // 历史记录区域设置
-    const historyAreaY = this.canvas.height * 0.85;
-    const historyAreaHeight = this.canvas.height * 0.12;
+    const historyAreaY = this.canvas.height * 0.82;
+    const historyAreaHeight = this.canvas.height * 0.15;
     const lineHeight = 20;
     const padding = 10;
 
