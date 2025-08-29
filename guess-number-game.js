@@ -20,7 +20,7 @@ class GuessNumberGame {
 
     // 游戏配置
     this.config = {
-      initialTime: 120, // 初始时间120秒
+      initialTime: 3, // 初始时间120秒
       maxGuesses: 10, // 最大猜测次数
       hintCost: 100, // 提示扣分
       timeAddCost: 10, // 加时扣分
@@ -116,17 +116,31 @@ class GuessNumberGame {
 
   bindEvents() {
     // 移除之前的事件监听器
-    if (this.keydownHandler) {
-      document.removeEventListener("keydown", this.keydownHandler);
-    }
-    if (this.touchHandler) {
-      this.canvas.removeEventListener("touchstart", this.touchHandler);
-    }
-    if (this.touchMoveHandler) {
-      this.canvas.removeEventListener("touchmove", this.touchMoveHandler);
-    }
-    if (this.touchEndHandler) {
-      this.canvas.removeEventListener("touchend", this.touchEndHandler);
+    if (typeof wx !== "undefined") {
+      // 小程序环境
+      if (this.touchHandler) {
+        wx.offTouchStart(this.touchHandler);
+      }
+      if (this.touchMoveHandler) {
+        wx.offTouchMove(this.touchMoveHandler);
+      }
+      if (this.touchEndHandler) {
+        wx.offTouchEnd(this.touchEndHandler);
+      }
+    } else {
+      // Web环境
+      if (this.keydownHandler) {
+        document.removeEventListener("keydown", this.keydownHandler);
+      }
+      if (this.touchHandler) {
+        this.canvas.removeEventListener("touchstart", this.touchHandler);
+      }
+      if (this.touchMoveHandler) {
+        this.canvas.removeEventListener("touchmove", this.touchMoveHandler);
+      }
+      if (this.touchEndHandler) {
+        this.canvas.removeEventListener("touchend", this.touchEndHandler);
+      }
     }
 
     // 键盘事件
