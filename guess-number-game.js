@@ -20,7 +20,7 @@ class GuessNumberGame {
 
     // 游戏配置
     this.config = {
-      initialTime: 3, // 初始时间120秒
+      initialTime: 120, // 初始时间120秒
       maxGuesses: 10, // 最大猜测次数
       hintCost: 100, // 提示扣分
       timeAddCost: 10, // 加时扣分
